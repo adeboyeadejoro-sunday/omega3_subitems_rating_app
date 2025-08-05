@@ -37,7 +37,7 @@ class SubitemProcessor:
                 parent_unique_id = unique_id
                 parent_SKU = str(row.get('SKU', '')).strip()
                 parent_LOT = str(row.get('LOT', '')).strip()
-                parent_name = str(row.get('Name', '')).strip()
+                parent_name = str(row.iloc[0]).strip()
 
 
                 # Check if next row is the Subitems header
