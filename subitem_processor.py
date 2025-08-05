@@ -37,6 +37,8 @@ class SubitemProcessor:
                 parent_unique_id = unique_id
                 parent_SKU = row.get('SKU', '')
                 parent_LOT = row.get('LOT', '')
+                parent_name = row.get('Name', '')
+
 
                 # Check if next row is the Subitems header
                 if i + 1 < n_rows:
@@ -70,6 +72,7 @@ class SubitemProcessor:
                                 'parent_unique_id': parent_unique_id,
                                 'parent_SKU': parent_SKU,
                                 'parent_LOT': parent_LOT,
+                                'parent_name': parent_name,  # <-- Add this line
                                 'subitem_name': subitem_name,
                                 'subitem_rating': subitem_rating,
                             })
