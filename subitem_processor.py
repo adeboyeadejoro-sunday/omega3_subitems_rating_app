@@ -25,42 +25,62 @@ class SubitemProcessor:
 
     def _flatten(self) -> pd.DataFrame:
         flat_rows = []
-        i = 0
         n_rows = len(self.df)
-        
+        i = 0
+
         while i < n_rows:
-            main = self.df.iloc[i]
-            rating_cell = str(main['SubItem-Rating']).strip()
-            if not rating_cell:
-                i += 1
-                continue
+            row = self.df.iloc[i]
+            unique_id = str(row.get('Unique Element-ID', '')).strip()
 
-            sub_ratings = [r.strip() for r in rating_cell.split(',') if r.strip()]
-            n_sub = len(sub_ratings)
+            # Check if this is a main row (Unique Element-ID is all digits)
+            if unique_id.isdigit():
+                parent_unique_id = unique_id
+                parent_SKU = row.get('SKU', '')
+                parent_LOT = row.get('LOT', '')
 
-            # attempt to grab the subitem-header row
-            try:
-                header = self.df.iloc[i + 1]
-                hdr = header.astype(str).str.strip().str.lower()
-                name_col   = hdr[hdr == 'name'].index[0]
-                rating_col = hdr[hdr == 'item-rating'].index[0]
-            except Exception:
-                # skip this “main” if no proper header follows
-                print(f"⚠️ Skipping row {i}: no valid subitem header found.")
-                i += 1
-                continue
+                # Check if next row is the Subitems header
+                if i + 1 < n_rows:
+                    header_row = self.df.iloc[i + 1]
+                    if str(header_row[0]).strip().lower() == 'subitems':
+                        # Find column indices for Name and Item-Rating
+                        hdr = header_row.astype(str).str.strip().str.lower()
+                        try:
+                            name_col = hdr[hdr == 'name'].index[0]
+                            rating_col = hdr[hdr == 'item-rating'].index[0]
+                        except IndexError:
+                            print(f"⚠️ Skipping main row {i}: Subitem headers not found properly.")
+                            i += 2
+                            continue
 
-            entries = self.df.iloc[i + 2 : i + 2 + n_sub]
-            for entry in entries.itertuples(index=False, name=None):
-                flat_rows.append({
-                    'parent_unique_id': main['Unique Element-ID'],
-                    'parent_SKU':       main['SKU'],
-                    'parent_LOT':       main['LOT'],
-                    'subitem_name':     entry[self.df.columns.get_loc(name_col)],
-                    'subitem_rating':   entry[self.df.columns.get_loc(rating_col)],
-                })
+                        # Process subitem rows until next main row or EOF
+                        j = i + 2
+                        while j < n_rows:
+                            next_row = self.df.iloc[j]
+                            next_unique_id = str(next_row.get('Unique Element-ID', '')).strip()
 
-            i += 2 + n_sub
+                            if next_unique_id.isdigit():
+                                # Next main row reached — stop subitem processing
+                                break
+
+                            # This is a subitem row
+                            subitem_name = next_row[name_col]
+                            subitem_rating = next_row[rating_col]
+
+                            flat_rows.append({
+                                'parent_unique_id': parent_unique_id,
+                                'parent_SKU': parent_SKU,
+                                'parent_LOT': parent_LOT,
+                                'subitem_name': subitem_name,
+                                'subitem_rating': subitem_rating,
+                            })
+
+                            j += 1
+
+                        i = j  # Move i to next main row
+                        continue
+                    else:
+                        print(f"⚠️ Skipping main row {i}: Subitems header not found.")
+            i += 1
 
         flat = pd.DataFrame(flat_rows)
         if self.corrections:
