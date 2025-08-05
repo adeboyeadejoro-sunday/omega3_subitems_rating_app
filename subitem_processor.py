@@ -35,9 +35,9 @@ class SubitemProcessor:
             # Check if this is a main row (Unique Element-ID is all digits)
             if unique_id.isdigit():
                 parent_unique_id = unique_id
-                parent_SKU = row.get('SKU', '')
-                parent_LOT = row.get('LOT', '')
-                parent_name = row.get('Name', '')
+                parent_SKU = str(row.get('SKU', '')).strip()
+                parent_LOT = str(row.get('LOT', '')).strip()
+                parent_name = str(row.get('Name', '')).strip()
 
 
                 # Check if next row is the Subitems header
