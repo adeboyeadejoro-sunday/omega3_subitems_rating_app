@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 from subitem_processor import SubitemProcessor  # your class from earlier
 
-st.title("Monday Subitem Ratings Reporter")
+st.title("Monday Subitem Ratings Reporter (Filtered for One Subitem)")
 
 # 1) File uploader
 uploaded = st.file_uploader("Upload your CSV export", type="csv")
